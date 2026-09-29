@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flux Rec</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+  <aside id="nav">
+    <div class="brand"><span class="logo">◈</span> FLUX REC</div>
+    <button class="nav-btn active" data-screen="home">▶ Play</button>
+    <div class="nav-sep"></div>
+    <button class="nav-btn" data-screen="updates">Updates <span id="nav-update-dot" class="dot hidden"></span></button>
+    <button class="nav-btn" data-screen="verify">Verify</button>
+    <button class="nav-btn" data-screen="settings">Settings</button>
+    <div class="nav-sep"></div>
+    <button class="nav-btn small" id="btn-discord">Discord</button>
+    <button class="nav-btn small" id="btn-help">Help</button>
+    <div class="nav-foot"><span id="ver">v1.0.0</span></div>
+  </aside>
+  <main id="content">
+    <!-- HOME -->
+    <section id="screen-home" class="screen active">
+      <div class="hero">
+        <div id="hero-status" class="hero-status">Checking…</div>
+        <div id="hero-sub" class="hero-sub"></div>
+        <div id="hero-progress" class="progress hidden"><div id="hero-bar" class="bar"></div></div>
+        <button id="btn-play" class="btn primary big" disabled>PLAY</button>
+        <button id="btn-skip" class="btn ghost hidden">Play without updating</button>
+      </div>
+      <div class="pills">
+        <div class="pill" id="pill-game" title="Game files"><span class="pdot"></span><span class="plabel">Game</span><span class="pdetail"></span></div>
+        <div class="pill" id="pill-bepinex" title="BepInEx"><span class="pdot"></span><span class="plabel">BepInEx</span><span class="pdetail"></span></div>
+        <div class="pill" id="pill-plugin" title="Plugin"><span class="pdot"></span><span class="plabel">Plugin</span><span class="pdetail"></span></div>
+        <div class="pill" id="pill-backend" title="Backend"><span class="pdot"></span><span class="plabel">Backend</span><span class="pdetail"></span></div>
+      </div>
+      <div class="card">
+        <h3>What's new</h3>
+        <pre id="changelog">Loading…</pre>
+      </div>
+      <div id="home-log" class="log"></div>
+    </section>
+    <!-- UPDATES -->
+    <section id="screen-updates" class="screen">
+      <h2>Updates</h2>
+      <div id="channels"></div>
+      <div class="row">
+        <button id="btn-update-all" class="btn primary">Update all</button>
+        <button id="btn-play-anyway" class="btn ghost">Play without updating</button>
+      </div>
+      <div id="updates-log" class="log"></div>
+    </section>
+    <!-- VERIFY -->
+    <section id="screen-verify" class="screen">
+      <h2>Verify / Repair</h2>
+      <p class="muted">Checks every game file against the manifest and re-downloads only what changed.</p>
+      <div class="row">
+        <button id="btn-verify" class="btn primary">Verify game files</button>
+      </div>
+      <div id="verify-progress" class="progress hidden"><div id="verify-bar" class="bar"></div></div>
+      <div id="verify-result" class="log"></div>
+      <div class="row">
+        <button id="btn-repair-bepinex" class="btn">Reinstall BepInEx</button>
+        <button id="btn-reset-plugin" class="btn">Reset plugin to mirror version</button>
+      </div>
+      <div class="card">
+        <h3>Defender</h3>
+        <div id="defender-steps" class="muted"></div>
+      </div>
+    </section>
+    <!-- SETTINGS -->
+    <section id="screen-settings" class="screen">
+      <h2>Settings</h2>
+      <label class="field">Install directory
+        <div class="row"><input id="set-dir" type="text" readonly><button id="btn-browse" class="btn">Change…</button></div>
+      </label>
+      <label class="field">Update channel
+        <select id="set-channel"><option value="stable">Stable</option><option value="beta">Beta</option></select>
+      </label>
+      <label class="check"><input id="set-check" type="checkbox"> Check for updates on launch</label>
+      <label class="check"><input id="set-close" type="checkbox"> Close launcher when game starts</label>
+      <label class="check"><input id="set-noconsole" type="checkbox"> Launch game without console</label>
+      <div class="row">
+        <button id="btn-save-settings" class="btn primary">Save</button>
+        <button id="btn-open-folder" class="btn">Open game folder</button>
+        <button id="btn-diag" class="btn">Copy diagnostics</button>
+      </div>
+      <div id="settings-log" class="log"></div>
+    </section>
+  </main>
+</div>
+<!-- FIRST RUN WIZARD -->
+<div id="wizard" class="hidden">
+  <div class="wizard-box">
+    <h2 id="wiz-title">Welcome to Flux Rec</h2>
+    <div id="wiz-body"></div>
+    <div id="wiz-progress" class="progress hidden"><div id="wiz-bar" class="bar"></div></div>
+    <div class="row end">
+      <button id="wiz-back" class="btn ghost">Back</button>
+      <button id="wiz-next" class="btn primary">Next</button>
+    </div>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
