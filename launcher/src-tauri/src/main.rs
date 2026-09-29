@@ -277,34 +277,10 @@ async fn reset_plugin(app: tauri::AppHandle) -> Result<String, String> {
 
 #[tauri::command]
 async fn get_changelog() -> Result<String, String> {
-    // Latest release body from GitHub (fail-soft -> empty).
-    let url = format!(
-        "https://api.github.com/repos/{}/releases?per_page=5",
-        fluxrec_core::constants::RELEASES_REPO
-    );
-    let text = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(8))
-        .user_agent("FluxRecLauncher/1.0")
-        .build()
-        .map_err(|e| e.to_string())?
-        .get(&url)
-        .header("Accept", "application/vnd.github+json")
-        .send()
+    // Fail-soft -> empty string (the UI shows a fallback message).
+    Ok(fluxrec_core::update_launcher::changelog()
         .await
-        .map_err(|e| e.to_string())?
-        .text()
-        .await
-        .map_err(|e| e.to_string())?;
-    let releases: Vec<serde_json::Value> =
-        serde_json::from_str(&text).map_err(|e| e.to_string())?;
-    let mut out = String::new();
-    for r in releases.iter().take(3) {
-        let tag = r.get("tag_name").and_then(|v| v.as_str()).unwrap_or("?");
-        let body = r.get("body").and_then(|v| v.as_str()).unwrap_or("");
-        let first: String = body.lines().take(4).collect::<Vec<_>>().join("\n");
-        out.push_str(&format!("{tag}\n{first}\n\n"));
-    }
-    Ok(out)
+        .unwrap_or_default())
 }
 
 #[tauri::command]

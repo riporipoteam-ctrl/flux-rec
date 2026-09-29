@@ -193,6 +193,27 @@ pub fn apply_update_and_relaunch(_new_exe: &std::path::Path, _parent_pid: u32) -
     ))
 }
 
+/// Latest release notes (for the "What's new" card). Fail-soft: empty on error.
+pub async fn changelog() -> Result<String> {
+    let url = format!("https://api.github.com/repos/{RELEASES_REPO}/releases?per_page=5");
+    let text = download_client()
+        .get(&url)
+        .header("Accept", "application/vnd.github+json")
+        .send()
+        .await?
+        .text()
+        .await?;
+    let releases: Vec<serde_json::Value> = serde_json::from_str(&text)?;
+    let mut out = String::new();
+    for r in releases.iter().take(3) {
+        let tag = r.get("tag_name").and_then(|v| v.as_str()).unwrap_or("?");
+        let body = r.get("body").and_then(|v| v.as_str()).unwrap_or("");
+        let first: String = body.lines().take(4).collect::<Vec<_>>().join("\n");
+        out.push_str(&format!("{tag}\n{first}\n\n"));
+    }
+    Ok(out)
+}
+
 fn download_client() -> reqwest::Client {
     reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(10))
