@@ -23,7 +23,7 @@ jobs:
 
       - name: Install frontend deps
         working-directory: launcher
-        run: npm ci
+        run: npm install
 
       - name: Build with Tauri CLI
         working-directory: launcher
