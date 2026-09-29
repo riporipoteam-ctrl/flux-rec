@@ -9,7 +9,6 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,31 +20,21 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: x86_64-pc-windows-msvc
 
-      - name: Rust cache
-        uses: swatinem/rust-cache@v2
-        with:
-          workspaces: './launcher/src-tauri -> target'
-
-      - name: Install frontend dependencies
+      - name: Install frontend deps
         working-directory: launcher
         run: npm ci
 
-      - name: Build Tauri app
-        uses: tauri-apps/tauri-action@v2
+      - name: Build with Tauri CLI
+        working-directory: launcher
+        run: |
+          npm install -g @tauri-apps/cli@2
+          tauri build --bundles nsis
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          projectPath: launcher
-          tagName: ${{ github.ref_name }}
-          releaseName: 'Flux Rec Launcher ${{ github.ref_name }}'
-          releaseBody: |
-            Flux Rec Launcher — fresh v2 build.
 
-            - 3 independent update channels (launcher, game, plugin)
-            - Anti-wipe protection
-            - Fail-soft offline mode
-          releaseDraft: false
-          prerelease: false
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: fluxrec-launcher-windows
+          path: launcher/src-tauri/target/release/bundle/nsis/*.exe
