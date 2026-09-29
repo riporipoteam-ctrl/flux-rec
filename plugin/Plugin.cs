@@ -29,6 +29,7 @@ public class FluxRecPlugin : BasePlugin
         applied += ApplyPatchSet(harmony, typeof(HttpPatches), "HTTP redirect");
         applied += ApplyPatchSet(harmony, typeof(SteamPatches), "Steam bypass");
         applied += ApplyPatchSet(harmony, typeof(PhotonPatches), "Photon App IDs");
+        applied += ApplyPatchSet(harmony, typeof(WatchUIPatches), "Watch UI (RRUI force-enable)");
 
         FluxLog.Info($"=== {NAME} v{VERSION} loaded ({applied} patch groups) ===");
         Log.LogInfo($"{NAME} v{VERSION} loaded.");
