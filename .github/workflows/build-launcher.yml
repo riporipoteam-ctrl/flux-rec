@@ -1,13 +1,14 @@
 name: Build Flux Rec Launcher (Windows)
 
+# Needed by softprops/action-gh-release to create the GitHub Release.
+permissions:
+  contents: write
+
 on:
   push:
     tags:
       - 'launcher-v*'
   workflow_dispatch:
-
-permissions:
-  contents: write
 
 jobs:
   build:
@@ -24,68 +25,73 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
+      # NOTE: `launcher/` is a Cargo workspace (members: core, src-tauri).
+      # Cargo puts ALL build outputs in the WORKSPACE target dir:
+      #   launcher/target/release/...
+      # NOT launcher/src-tauri/target/ (that directory never exists).
+      # Every path below must use the workspace target dir.
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: './launcher/src-tauri -> target'
+          workspaces: './launcher -> target'
 
-      # FIX 1: Install Tauri CLI locally (not global) — avoids Windows PATH
+      # Install Tauri CLI locally (not global) — avoids Windows PATH
       # issues with `npm install -g` inside the same run block.
       - name: Install Tauri CLI (local devDependency)
         working-directory: launcher
         run: npm install --no-save @tauri-apps/cli@2
 
-      # FIX 2: Use npx (local CLI) instead of global `tauri` binary.
       - name: Build with Tauri CLI
         working-directory: launcher
         run: npx tauri build --bundles nsis --verbose
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # FIX 3: Always show what was actually produced — no more silent
-      # "succeeded but no exe" mysteries.
+      # Always show what was actually produced — no more silent
+      # "succeeded but no exe" mysteries. Uses the WORKSPACE target dir.
       - name: Debug - list build outputs
         if: always()
         shell: pwsh
         run: |
-          echo "=== src-tauri/target/release/ ==="
-          Get-ChildItem -Path "launcher/src-tauri/target/release/" -ErrorAction SilentlyContinue | ForEach-Object { echo $_.Name }
+          echo "=== launcher/target/release/ ==="
+          Get-ChildItem -Path "launcher/target/release/" -ErrorAction SilentlyContinue | ForEach-Object { echo $_.Name }
           echo ""
-          echo "=== bundle/ (recursive) ==="
-          Get-ChildItem -Path "launcher/src-tauri/target/release/bundle/" -Recurse -ErrorAction SilentlyContinue | ForEach-Object { echo $_.FullName }
+          echo "=== launcher/target/release/bundle/ (recursive) ==="
+          Get-ChildItem -Path "launcher/target/release/bundle/" -Recurse -ErrorAction SilentlyContinue | ForEach-Object { echo $_.FullName }
 
-      # FIX 4: Safety net — direct cargo build guarantees fluxrec-launcher.exe
-      # exists. If `tauri build` already compiled it, this is a fast no-op
-      # (incremental). If tauri silently produced nothing, this fixes it.
-      # The build.rs embeds frontend assets via tauri_build::build(), so the
-      # raw exe is a fully functional standalone launcher.
+      # Safety net — direct cargo build guarantees fluxrec-launcher.exe
+      # exists in the workspace target dir. If `tauri build` already
+      # compiled it, this is a fast incremental no-op. The build.rs
+      # embeds frontend assets via tauri_build::build(), so the raw exe
+      # is a fully functional standalone launcher.
       - name: Safety net - cargo build raw exe
-        working-directory: launcher/src-tauri
-        run: cargo build --release
+        working-directory: launcher
+        run: cargo build --release -p fluxrec-launcher
 
-      # FIX 5: Broad exe search — NSIS setup exe, any bundle exe, then raw exe.
+      # Broad exe search across the WORKSPACE target dir:
+      # NSIS setup exe -> any bundle exe -> raw cargo exe.
       - name: Find executable
         id: find
         shell: pwsh
         run: |
           $exe = $null
           # 1. NSIS installer (Tauri v2 names it {product}_{version}_x64-setup.exe)
-          $exe = Get-ChildItem -Path "launcher/src-tauri/target/release/bundle/nsis/*setup.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          $exe = Get-ChildItem -Path "launcher/target/release/bundle/nsis/*setup.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
           # 2. Any exe in the NSIS bundle dir
           if (-not $exe) {
-            $exe = Get-ChildItem -Path "launcher/src-tauri/target/release/bundle/nsis/*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+            $exe = Get-ChildItem -Path "launcher/target/release/bundle/nsis/*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
           }
-          # 3. Any exe in any bundle subdir (msi uses .msi, but check anyway)
+          # 3. Any exe in any bundle subdir
           if (-not $exe) {
-            $exe = Get-ChildItem -Path "launcher/src-tauri/target/release/bundle/*/*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+            $exe = Get-ChildItem -Path "launcher/target/release/bundle/*/*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
           }
           # 4. Raw cargo-built exe (from [[bin]] name = "fluxrec-launcher")
           if (-not $exe) {
-            $exe = Get-ChildItem -Path "launcher/src-tauri/target/release/fluxrec-launcher.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+            $exe = Get-ChildItem -Path "launcher/target/release/fluxrec-launcher.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
           }
           # 5. Last resort: any exe in release/ that isn't a build tool
           if (-not $exe) {
-            $exe = Get-ChildItem -Path "launcher/src-tauri/target/release/*.exe" -ErrorAction SilentlyContinue | Where-Object { $_.Name -notlike "build_script*" } | Select-Object -First 1
+            $exe = Get-ChildItem -Path "launcher/target/release/*.exe" -ErrorAction SilentlyContinue | Where-Object { $_.Name -notlike "build_script*" } | Select-Object -First 1
           }
           if ($exe) {
             $sizeMB = [math]::Round($exe.Length / 1MB, 1)
