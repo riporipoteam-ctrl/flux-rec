@@ -36,9 +36,11 @@ if (listen) {
 let pendingUpdates = [];
 async function refreshStatus() {
   $("hero-status").textContent = "Checking…";
+  // Timeout guard: never hang on "Checking…" forever.
+  const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 15000));
   try {
-    const s = await call("get_status");
-    if (!s) return;
+    const s = await Promise.race([call("get_status"), timeout]);
+    if (!s) { $("hero-status").textContent = "Status check failed"; showSetupButton(true); return; }
     setPill("pill-game", s.game_files_ok, s.game_detail, "verify");
     setPill("pill-bepinex", s.bepinex_ok, s.bepinex_detail, "verify");
     setPill("pill-plugin", s.plugin_ok, s.plugin_detail, "verify");
@@ -47,8 +49,18 @@ async function refreshStatus() {
     $("hero-status").textContent = allOk ? "Ready to play" : "Setup needed";
     $("hero-status").style.color = allOk ? "var(--ok)" : "var(--warn)";
     $("btn-play").disabled = !s.game_files_ok;
-    if (!s.game_files_ok) $("hero-sub").textContent = "Game files missing — run the first-run setup or Verify.";
-  } catch (e) { $("hero-status").textContent = "Status check failed"; }
+    if (!s.game_files_ok) {
+      $("hero-sub").textContent = "Game files missing — click Download below to get the game.";
+      showSetupButton(true);
+    } else {
+      showSetupButton(false);
+    }
+  } catch (e) { $("hero-status").textContent = "Status check failed"; showSetupButton(true); }
+}
+/* Show/hide the prominent Download/Setup button on the home screen. */
+function showSetupButton(show) {
+  const btn = $("btn-setup");
+  if (btn) btn.classList.toggle("hidden", !show);
 }
 function setPill(id, ok, detail, jump) {
   const el = $(id);
@@ -69,6 +81,8 @@ $("btn-play").addEventListener("click", async () => {
   } catch (e) { $("hero-status").textContent = "Launch failed"; log("home-log", String(e)); $("btn-play").disabled = false; }
 });
 $("btn-skip").addEventListener("click", () => $("btn-play").click());
+/* Manual setup button — opens the first-run wizard on demand. */
+$("btn-setup").addEventListener("click", () => openWizard());
 
 /* ---------- updates ---------- */
 async function refreshUpdates() {
