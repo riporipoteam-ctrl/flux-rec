@@ -1,0 +1,18 @@
+[package]
+name = "fluxrec-launcher-simple"
+version = "1.0.0"
+edition = "2021"
+description = "Flux Rec simple CLI launcher (fallback — no Tauri, no Node, no web UI)"
+
+[[bin]]
+name = "FluxRecLauncher"
+path = "src/main.rs"
+
+[profile.release]
+# Smaller binary; faster CI link. Game-launcher doesn't need max opt.
+opt-level = "s"
+
+[dependencies]
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls"] }
+sha2 = "0.10"
+zip = "2"

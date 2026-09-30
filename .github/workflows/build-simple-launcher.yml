@@ -1,0 +1,37 @@
+name: Build Simple Launcher (Windows)
+
+on:
+  push:
+    tags:
+      - 'simple-v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build
+        run: cargo build --release --manifest-path launcher-simple/Cargo.toml
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: 'Flux Rec Simple Launcher ${{ github.ref_name }}'
+          body: |
+            Flux Rec Simple Launcher — fallback build (no Tauri).
+
+            - BepInEx setup
+            - Plugin sync from HF mirror
+            - Launches the game
+          files: launcher-simple/target/release/FluxRecLauncher.exe
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
