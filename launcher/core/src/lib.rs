@@ -26,7 +26,7 @@ pub mod constants {
     /// GitHub repo that publishes launcher releases.
     pub const RELEASES_REPO: &str = "riporipoteam-ctrl/flux-rec";
     /// Release tag prefix for launcher builds (kept from the old line).
-    pub const LAUNCHER_TAG_PREFIX: &str = "recflare-installer-v";
+    pub const LAUNCHER_TAG_PREFIX: &str = "launcher-v";
     /// BepInEx version the game needs.
     pub const BEPINEX_VERSION: &str = "6.0.0-pre.2";
     /// BepInEx download URL (Unity IL2CPP, Win x64).
