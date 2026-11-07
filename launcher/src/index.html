@@ -9,35 +9,45 @@
 <body>
 <div id="app">
   <aside id="nav">
-    <div class="brand"><span class="logo">◈</span> FLUX REC</div>
-    <button class="nav-btn active" data-screen="home">▶ Play</button>
+    <div class="brand"><span class="logo">◆</span><span>FLUX <b>REC</b><small>RIPO TEAM</small></span></div>
+    <div class="nav-caption">YOUR SPACE</div>
+    <button class="nav-btn active" data-screen="home"><span class="nav-symbol">⌂</span> Discover</button>
     <div class="nav-sep"></div>
-    <button class="nav-btn" data-screen="updates">Updates <span id="nav-update-dot" class="dot hidden"></span></button>
-    <button class="nav-btn" data-screen="verify">Verify</button>
-    <button class="nav-btn" data-screen="settings">Settings</button>
+    <button class="nav-btn" data-screen="updates"><span class="nav-symbol">↓</span> Downloads <span id="nav-update-dot" class="dot hidden"></span></button>
+    <button class="nav-btn" data-screen="verify"><span class="nav-symbol">◈</span> Verify & repair</button>
+    <div class="nav-caption">PREFERENCES</div>
+    <button class="nav-btn" data-screen="settings"><span class="nav-symbol">⚙</span> Settings</button>
     <div class="nav-sep"></div>
     <button class="nav-btn small" id="btn-discord">Discord</button>
     <button class="nav-btn small" id="btn-help">Help</button>
-    <div class="nav-foot"><span id="ver">v1.0.0</span></div>
+    <div class="nav-foot"><span class="online-dot"></span> Flux Rec launcher <span id="ver">v1.0.9</span></div>
   </aside>
   <main id="content">
+    <header class="topbar"><div><span class="eyebrow">RIPO TEAM / FLUX REC</span><strong>Your game, ready when you are.</strong></div><span class="topbar-label">LAUNCHER</span></header>
     <!-- HOME -->
     <section id="screen-home" class="screen active">
       <div class="hero">
-        <div id="hero-status" class="hero-status">Checking…</div>
-        <div id="hero-sub" class="hero-sub"></div>
-        <div id="hero-progress" class="progress hidden"><div id="hero-bar" class="bar"></div></div>
-        <button id="btn-play" class="btn primary big" disabled>PLAY</button>
-        <button id="btn-setup" class="btn primary big hidden">DOWNLOAD GAME</button>
-        <button id="btn-skip" class="btn ghost hidden">Play without updating</button>
+        <div class="hero-copy">
+          <span class="hero-kicker">FEATURED GAME <span class="hero-kicker-line"></span> FLUX REC</span>
+          <h1>Make room for<br><em>what's next.</em></h1>
+          <p>Step back into the worlds you love. Your adventures, friends, and creations are one click away.</p>
+          <div class="hero-state"><span class="online-dot"></span><div id="hero-status" class="hero-status">Checking…</div></div>
+          <div id="hero-sub" class="hero-sub"></div>
+          <div id="hero-progress" class="progress hidden"><div id="hero-bar" class="bar"></div></div>
+          <div class="hero-actions"><button id="btn-play" class="btn primary big" disabled>PLAY NOW <span>↗</span></button>
+          <button id="btn-setup" class="btn primary big hidden">DOWNLOAD GAME <span>↓</span></button>
+          <button id="btn-skip" class="btn ghost hidden">Play without updating</button></div>
+        </div>
+        <div class="hero-art" aria-hidden="true"><span class="hero-orbit orbit-one"></span><span class="hero-orbit orbit-two"></span><span class="hero-glyph">F<span>R</span></span><span class="hero-art-label">EXPLORE TOGETHER</span></div>
       </div>
+      <div class="section-heading"><div><span class="eyebrow">YOUR INSTALLATION</span><h2>Game status</h2></div><span class="muted">Everything you need to play</span></div>
       <div class="pills">
         <div class="pill" id="pill-game" title="Game files"><span class="pdot"></span><span class="plabel">Game</span><span class="pdetail"></span></div>
         <div class="pill" id="pill-bepinex" title="BepInEx"><span class="pdot"></span><span class="plabel">BepInEx</span><span class="pdetail"></span></div>
         <div class="pill" id="pill-plugin" title="Plugin"><span class="pdot"></span><span class="plabel">Plugin</span><span class="pdetail"></span></div>
         <div class="pill" id="pill-backend" title="Backend"><span class="pdot"></span><span class="plabel">Backend</span><span class="pdetail"></span></div>
       </div>
-      <div class="card">
+      <div class="card changelog-card">
         <h3>What's new</h3>
         <pre id="changelog">Loading…</pre>
       </div>

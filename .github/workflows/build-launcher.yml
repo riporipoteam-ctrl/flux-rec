@@ -68,6 +68,14 @@ jobs:
         working-directory: launcher
         run: cargo build --release -p fluxrec-launcher
 
+      - name: Hash standalone launcher
+        shell: pwsh
+        run: |
+          $exe = 'launcher/target/release/fluxrec-launcher.exe'
+          if (-not (Test-Path -LiteralPath $exe)) { throw 'Standalone launcher output missing' }
+          $hash = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLower()
+          Set-Content -LiteralPath "$exe.sha256" -Value $hash -NoNewline
+
       # Broad exe search across the WORKSPACE target dir:
       # NSIS setup exe -> any bundle exe -> raw cargo exe.
       - name: Find executable
@@ -118,8 +126,12 @@ jobs:
             - Anti-wipe protection
             - Fail-soft offline mode
             - Plugin v2.0.1 with RRUI force-enable (Store crash fix)
-          files: ${{ steps.find.outputs.path }}
+          files: |
+            ${{ steps.find.outputs.path }}
+            launcher/target/release/fluxrec-launcher.exe
+            launcher/target/release/fluxrec-launcher.exe.sha256
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

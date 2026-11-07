@@ -111,10 +111,9 @@ $("btn-update-all").addEventListener("click", async () => {
     if (launcher) {
       log("updates-log", "Downloading launcher v" + launcher.latest + "…");
       const newExe = await call("fetch_launcher_update", { latest: launcher.latest, current: launcher.current });
-      log("updates-log", "Launcher downloaded. Restart to apply — game files untouched.");
-      // Hand off to the helper: spawn new exe with --apply-update, then exit.
-      // (Shell spawn via a tiny backend command would be cleaner; for v1 we instruct.)
-      alert("Launcher update downloaded. Close and re-run the new launcher to finish updating.");
+      log("updates-log", "Launcher downloaded and verified. Restarting to apply…");
+      await call("install_launcher_update", { stagedPath: newExe });
+      return;
     }
     const lines = await call("apply_updates") || [];
     lines.forEach(l => log("updates-log", l));

@@ -1,6 +1,6 @@
 //! Channel A — launcher self-update.
 //!
-//! Source: GitHub releases on `RELEASES_REPO`, tags `recflare-installer-v*`
+//! Source: GitHub releases on `RELEASES_REPO`, tags `launcher-v*`
 //! (+ `-beta` when the beta channel is selected).
 //! Anti-wipe rule: this channel may ONLY replace the launcher binary itself.
 //! It never touches the game dir.
@@ -105,8 +105,8 @@ pub async fn fetch_update(
     let exe = rel
         .assets
         .iter()
-        .find(|a| a.name.ends_with(".exe") && !a.name.ends_with(".sha256"))
-        .ok_or_else(|| CoreError::Other("no .exe asset in release".into()))?;
+        .find(|a| a.name == "fluxrec-launcher.exe")
+        .ok_or_else(|| CoreError::Other("no standalone launcher in release".into()))?;
     let sha_asset = rel
         .assets
         .iter()
@@ -152,11 +152,10 @@ pub async fn fetch_update(
     Ok(tmp)
 }
 
-/// `--apply-update <new-exe>`: wait for the parent launcher to exit, swap the
-/// binaries, re-exec. Runs as a detached helper so the old exe is never
-/// replaced while running.
+/// Run from the staged new launcher as `--apply-update <installed-exe> <parent-pid>`.
+/// Wait for the installed launcher to exit, then copy this executable into place.
 #[cfg(windows)]
-pub fn apply_update_and_relaunch(new_exe: &std::path::Path, parent_pid: u32) -> Result<()> {
+pub fn apply_update_and_relaunch(installed_exe: &std::path::Path, parent_pid: u32) -> Result<()> {
     use std::os::windows::process::CommandExt;
     // Wait for parent to exit (poll).
     for _ in 0..600 {
@@ -171,18 +170,19 @@ pub fn apply_update_and_relaunch(new_exe: &std::path::Path, parent_pid: u32) -> 
         }
         std::thread::sleep(std::time::Duration::from_millis(500));
     }
-    let current = std::env::current_exe()?;
+    let staged = std::env::current_exe()?;
     // Keep a backup of the old launcher in case the swap fails midway.
-    let backup = current.with_extension("exe.bak");
+    let backup = installed_exe.with_extension("exe.bak");
     let _ = std::fs::remove_file(&backup);
-    std::fs::rename(&current, &backup)?;
-    if let Err(e) = std::fs::rename(new_exe, &current) {
+    std::fs::rename(installed_exe, &backup)?;
+    if let Err(e) = std::fs::copy(&staged, installed_exe) {
         // Roll back: restore the old launcher. Never leave the user stranded.
-        let _ = std::fs::rename(&backup, &current);
+        let _ = std::fs::remove_file(installed_exe);
+        let _ = std::fs::rename(&backup, installed_exe);
         return Err(CoreError::Other(format!("launcher swap failed, rolled back: {e}")));
     }
+    std::process::Command::new(installed_exe).spawn()?;
     let _ = std::fs::remove_file(&backup);
-    std::process::Command::new(&current).spawn()?;
     Ok(())
 }
 

@@ -3,7 +3,7 @@ members = ["core", "src-tauri"]
 resolver = "2"
 
 [workspace.package]
-version = "1.0.0"
+version = "1.0.9"
 edition = "2021"
 authors = ["Ripo Team"]
 license = "MIT"

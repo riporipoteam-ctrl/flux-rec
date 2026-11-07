@@ -2,7 +2,7 @@
 //!
 //! Modes:
 //! - default: run the launcher UI.
-//! - `--apply-update <new-exe>`: helper that swaps the launcher binary after
+//! - `--apply-update <installed-exe> <parent-pid>`: staged helper that swaps the launcher binary after
 //!   the main process exits, then relaunches (Channel A final step).
 
 #![cfg_attr(windows, windows_subsystem = "windows")]
@@ -158,6 +158,23 @@ async fn fetch_launcher_update(
         .await
         .map_err(|e| e.to_string())?;
     Ok(path.to_string_lossy().into_owned())
+}
+
+#[tauri::command]
+fn install_launcher_update(app: tauri::AppHandle, staged_path: String) -> Result<(), String> {
+    let installed = std::env::current_exe().map_err(|e| e.to_string())?;
+    let staged = PathBuf::from(staged_path);
+    if !staged.is_file() || staged == installed {
+        return Err("staged launcher missing".into());
+    }
+    std::process::Command::new(&staged)
+        .arg("--apply-update")
+        .arg(&installed)
+        .arg(std::process::id().to_string())
+        .spawn()
+        .map_err(|e| e.to_string())?;
+    app.exit(0);
+    Ok(())
 }
 
 // ---------- play ----------
@@ -328,12 +345,12 @@ fn defender_steps() -> Vec<String> {
 }
 
 fn main() {
-    // `--apply-update <new-exe>`: Channel A helper mode (no UI).
+    // `--apply-update <installed-exe> <parent-pid>`: Channel A helper mode (no UI).
     let args: Vec<String> = std::env::args().collect();
-    if args.len() == 3 && args[1] == "--apply-update" {
-        let new_exe = PathBuf::from(&args[2]);
-        let parent_pid = std::process::id();
-        match fluxrec_core::update_launcher::apply_update_and_relaunch(&new_exe, parent_pid) {
+    if args.len() == 4 && args[1] == "--apply-update" {
+        let installed_exe = PathBuf::from(&args[2]);
+        let parent_pid = args[3].parse::<u32>().unwrap_or(0);
+        match fluxrec_core::update_launcher::apply_update_and_relaunch(&installed_exe, parent_pid) {
             Ok(()) => std::process::exit(0),
             Err(e) => {
                 eprintln!("apply-update failed: {e}");
@@ -351,6 +368,7 @@ fn main() {
             check_updates,
             apply_updates,
             fetch_launcher_update,
+            install_launcher_update,
             play,
             verify_files,
             repair_files,
